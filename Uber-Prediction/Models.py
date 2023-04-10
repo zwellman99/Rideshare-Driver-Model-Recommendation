@@ -1,3 +1,9 @@
+import sys
+
+# Add path of the base environment to sys.path
+sys.path.append('/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages')
+
+
 import xgboost as xgb
 import pandas as pd
 from datetime import datetime, timedelta
@@ -130,6 +136,6 @@ class RideHeatmap:
         ax.set_title("Ride Count Heatmap")
 
         # Show the plot
-        plt.show()
+        return(fig)
 
-RideHeatmap(2019,1,1).plot_matrix()
+#RideHeatmap(2019,1,1).plot_matrix()

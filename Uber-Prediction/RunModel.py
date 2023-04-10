@@ -1,11 +1,26 @@
-import xgboost as xgb
+import sys
+
+# Add path of the base environment to sys.path
+sys.path.append('/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages')
+
 import pandas as pd
 from Models import predict_fare_amount, predict_ride_count
 from Models import RideHeatmap
+import matplotlib.pyplot as plt
+import sys
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtCharts import *
+from PyQt6.QtGui import *
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+import json
+import os
+import pytz
+import datetime
 
 """
 Predict_Fare_Amount
-*passenger_count: #
+*passenger_count: #$ccd
 *hour: 0-23
 *day_of_week: 0-6
 *month: 1-12
@@ -18,11 +33,7 @@ Predict_Ride_Count
 *day: 1-30
 """
 
-import sys
-from PyQt6.QtWidgets import *
-from PyQt6.QtCore import *
-import json
-import os
+
 
 
 class CarInfoWindow(QWidget):
@@ -119,26 +130,91 @@ class CarDashboard(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Enter Car Info')
-        self.setGeometry(100, 100, 500, 400)
+        self.setGeometry(100, 100, 700, 400)
 
-        # Create a QVBoxLayout to hold the widgets
-        layout = QVBoxLayout()
+        # Create a QGridLayout to hold the widgets
+        self.layout = QGridLayout()
 
         # Create a QLabel to display the prompt
-        prompt_label = QLabel('Select Manufacturing Date:')
-        layout.addWidget(prompt_label)
+        prompt_label = QLabel('Select the Date for Weekly Demand Projections:')
+        self.layout.addWidget(prompt_label, 0, 0)
 
         # Create a QDateEdit widget for date selection
         self.date_edit = QDateEdit()
 
         # Set an initial date for the date edit widget
         self.date_edit.setDate(QDate.currentDate())
+        self.layout.addWidget(self.date_edit, 0, 1)
 
-        # Add the date edit widget to the layout
-        layout.addWidget(self.date_edit)
+        # Create a QLabel to display the prompt for distance
+        distance_label = QLabel('Enter the Distance in Miles:')
+        self.layout.addWidget(distance_label, 0, 2)
+
+        # Create a QLineEdit widget for distance input
+        self.distance_edit = QLineEdit()
+        self.layout.addWidget(self.distance_edit, 0, 3)
+
+        # Create a QLabel to display the prompt for passengers
+        distance_label = QLabel('Enter the # of Passengers:')
+        self.layout.addWidget(distance_label, 1, 2)
+
+        # Create a QLineEdit widget for passengers input
+        self.passenger_edit = QLineEdit()
+        self.layout.addWidget(self.passenger_edit, 1, 3)
+
+        # Create a QPushButton widget for submission
+        submit_date = QPushButton('Submit date')
+
+        # Connect the clicked signal of the submit button to a slot function
+        submit_date.clicked.connect(self.handle_demand)
+
+        # Add the submit button to the layout
+        self.layout.addWidget(submit_date, 2, 0, 1, 2)
+
+        # Create a QPushButton widget for submission
+        submit_distance = QPushButton('Submit distance')
+
+        # Connect the clicked signal of the submit button to a slot function
+        submit_distance.clicked.connect(self.handle_fare)
+
+        # Add the submit button to the layout
+        self.layout.addWidget(submit_distance, 2, 2, 1, 2)
 
         # Set the layout for the CarDashboard widget
-        self.setLayout(layout)
+        self.setLayout(self.layout)
+
+    def handle_fare(self):
+        distance = float(self.distance_edit.text())
+        passengers = float(self.passenger_edit.text())
+        est_tz = pytz.timezone('US/Eastern')
+
+        # Get the current date and time in EST
+        now = datetime.datetime.now(est_tz)
+
+        # Extract the hour, day, day of week, and month from the datetime object
+        hour = now.hour
+        day = now.day
+        day_of_week = now.weekday() #should this be 0 or 1???? need to check
+        month = now.month
+        print(predict_fare_amount(passengers, hour, day_of_week, month, distance))
+
+
+    # Slot function to handle submission of the date
+    def handle_demand(self):
+        # Get the selected date from the date edit widget
+        selected_date = self.date_edit.date()
+
+        # Get the day, month, and year from the selected date
+        day = selected_date.day()
+        month = selected_date.month()
+        year = selected_date.year()
+
+        # Print the selected date to the console
+        print(f'Selected Date: {day}/{month}/{year}')
+        
+        heatmap = RideHeatmap(year,month,day).plot_matrix()
+        heatmap.show()
+
 
 class CarInfo(QWidget):
 
