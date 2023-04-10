@@ -1,6 +1,7 @@
 import xgboost as xgb
 import pandas as pd
 from Models import predict_fare_amount, predict_ride_count
+from Models import RideHeatmap
 
 """
 Predict_Fare_Amount
@@ -19,6 +20,7 @@ Predict_Ride_Count
 
 import sys
 from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 import json
 import os
 
@@ -81,7 +83,6 @@ class CarInfoWindow(QWidget):
         # set main layout
         self.setLayout(main_layout)
 
-
     def submit_car_info(self):
         year = self.year_input.text()
         mpg = self.mpg_input.text()
@@ -114,6 +115,31 @@ class CarInfoWindow(QWidget):
             error_msg.exec()
 
 
+class CarDashboard(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('Enter Car Info')
+        self.setGeometry(100, 100, 500, 400)
+
+        # Create a QVBoxLayout to hold the widgets
+        layout = QVBoxLayout()
+
+        # Create a QLabel to display the prompt
+        prompt_label = QLabel('Select Manufacturing Date:')
+        layout.addWidget(prompt_label)
+
+        # Create a QDateEdit widget for date selection
+        self.date_edit = QDateEdit()
+
+        # Set an initial date for the date edit widget
+        self.date_edit.setDate(QDate.currentDate())
+
+        # Add the date edit widget to the layout
+        layout.addWidget(self.date_edit)
+
+        # Set the layout for the CarDashboard widget
+        self.setLayout(layout)
+
 class CarInfo(QWidget):
 
     def __init__(self):
@@ -122,7 +148,7 @@ class CarInfo(QWidget):
         self.setGeometry(100, 100, 500, 400)
 
         # create buttons
-        self.enter_button = QPushButton('Enter Car Info')
+        self.enter_button = QPushButton('Update Car Info')
         self.dashboard_button = QPushButton('Go to Dashboard')
 
         # create layout for buttons
@@ -150,7 +176,8 @@ class CarInfo(QWidget):
         self.car_info_window.show()
 
     def go_to_dashboard(self):
-        print('Going to dashboard...')
+        self.dashboard_window = CarDashboard()
+        self.dashboard_window.show()
 
 
 
