@@ -17,6 +17,7 @@ import json
 import os
 import pytz
 import datetime
+import numpy as np
 
 """
 Predict_Fare_Amount
@@ -144,23 +145,23 @@ class CarDashboard(QWidget):
 
         # Set an initial date for the date edit widget
         self.date_edit.setDate(QDate.currentDate())
-        self.layout.addWidget(self.date_edit, 0, 1)
+        self.layout.addWidget(self.date_edit, 0, 1, 1, 1)
 
         # Create a QLabel to display the prompt for distance
         distance_label = QLabel('Enter the Distance in Miles:')
-        self.layout.addWidget(distance_label, 0, 2)
+        self.layout.addWidget(distance_label, 0, 2, 1, 1)
 
         # Create a QLineEdit widget for distance input
         self.distance_edit = QLineEdit()
-        self.layout.addWidget(self.distance_edit, 0, 3)
+        self.layout.addWidget(self.distance_edit, 0, 3, 1, 1)
 
         # Create a QLabel to display the prompt for passengers
         distance_label = QLabel('Enter the # of Passengers:')
-        self.layout.addWidget(distance_label, 1, 2)
+        self.layout.addWidget(distance_label, 1, 2, 1, 1)
 
         # Create a QLineEdit widget for passengers input
         self.passenger_edit = QLineEdit()
-        self.layout.addWidget(self.passenger_edit, 1, 3)
+        self.layout.addWidget(self.passenger_edit, 1, 3, 1, 1)
 
         # Create a QPushButton widget for submission
         submit_date = QPushButton('Submit date')
@@ -180,6 +181,16 @@ class CarDashboard(QWidget):
         # Add the submit button to the layout
         self.layout.addWidget(submit_distance, 2, 2, 1, 2)
 
+        self.fare_label = QLabel("Enter info above to calculate fare")
+        self.layout.addWidget(self.fare_label, 3, 2, 1, 2)
+
+                # Create a QLabel to display the top 5 indices
+        self.top_5_label = QLabel('Top 5 driving times will be displayed here... ')
+        font = QFont()
+        font.setBold(True)
+        self.top_5_label.setFont(font)
+        self.layout.addWidget(self.top_5_label, 3, 0, 1,1)
+
         # Set the layout for the CarDashboard widget
         self.setLayout(self.layout)
 
@@ -187,16 +198,28 @@ class CarDashboard(QWidget):
         distance = float(self.distance_edit.text())
         passengers = float(self.passenger_edit.text())
         est_tz = pytz.timezone('US/Eastern')
+        current_datetime = QDateTime.currentDateTime()
 
         # Get the current date and time in EST
         now = datetime.datetime.now(est_tz)
 
         # Extract the hour, day, day of week, and month from the datetime object
+        year = now.year
         hour = now.hour
         day = now.day
-        day_of_week = now.weekday() #should this be 0 or 1???? need to check
+        day_of_week = current_datetime.date().dayOfWeek()%7
         month = now.month
-        print(predict_fare_amount(passengers, hour, day_of_week, month, distance))
+        fare = predict_fare_amount(passengers, hour, day_of_week, month, distance)
+
+        week_dates = RideHeatmap(year, month, day).create_week_list(year, month, day)
+        matrix = RideHeatmap(year, month, day).create_matrix(week_dates)
+
+        #get the value in matrix corresponding to the current weekday and hour
+        current_value = matrix[hour//4][day_of_week]
+        print(current_value)
+        self.fare_label.setText(f'Estimated fare amount: ${fare:.2f}')
+        
+        
 
 
     # Slot function to handle submission of the date
@@ -211,10 +234,35 @@ class CarDashboard(QWidget):
 
         # Print the selected date to the console
         print(f'Selected Date: {day}/{month}/{year}')
-        
-        heatmap = RideHeatmap(year,month,day).plot_matrix()
-        heatmap.show()
 
+        # Get the matrix for the week
+        week_dates = RideHeatmap(year, month, day).create_week_list(year, month, day)
+        hourgroups = ['12:00-3:59am', '4:00-7:59am', '8:00-11:59am', '12:00-3:59pm', '4:00-7:59pm', '8:00-11:59pm']
+        day_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+# Create the ride matrix for the week
+        matrix = RideHeatmap(year, month, day).create_matrix(week_dates)
+
+        print(matrix)
+
+        # Get the indices of the top 5 values in the matrix
+        top_5_indices = np.argpartition(matrix.flatten(), -5)[-5:]
+        top_5_values = [matrix.flatten()[i] for i in top_5_indices]
+
+        # Create a dictionary with values as keys and indices as values
+        value_index_dict = dict(zip(top_5_values, top_5_indices))
+
+        # Sort the dictionary by keys in descending order
+        sorted_dict = dict(sorted(value_index_dict.items(), key=lambda item: item[0], reverse=True))
+
+        top_5_indices = [value_index_dict[value] for value in sorted_dict.keys()]
+        top_5_values = list(sorted_dict.keys())[:5]
+
+        # Set the text of the top_5_indices_label to display the results of the top 5 indices
+        self.top_5_label.setText('\n'.join([f'{week_dates[i%7]}, {day_of_week[i%7]} between {hourgroups[i//7]}' for i in top_5_indices]))
+
+        heatmap = RideHeatmap(year, month, day).plot_matrix()
+        heatmap.show()
 
 class CarInfo(QWidget):
 

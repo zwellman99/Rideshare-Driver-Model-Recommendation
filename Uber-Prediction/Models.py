@@ -75,7 +75,6 @@ class RideHeatmap:
 
         # Format the dates as strings with the desired format
         week_info = [date.strftime("%d-%m-%Y") for date in week_dates]
-        print(week_info)
         return week_info
 
     def create_matrix(self, week_dates):
@@ -106,7 +105,7 @@ class RideHeatmap:
         data = np.array(data)
 
         # Create a color map
-        cmap = plt.cm.get_cmap('RdYlBu_r')
+        cmap = plt.cm.get_cmap('coolwarm')
 
         # Create a figure and axis object
         fig, ax = plt.subplots()
@@ -130,7 +129,7 @@ class RideHeatmap:
         for i in range(len(hourgroups)):
             for j in range(len(self.week_dates)):
                 text = ax.text(j, i, "{:.1f}".format(data[i, j]),
-                               ha="center", va="center", color="w")
+                               ha="center", va="center", color="black")
 
             # Set the title
         ax.set_title("Ride Count Heatmap")
