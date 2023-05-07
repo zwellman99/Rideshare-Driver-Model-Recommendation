@@ -28,13 +28,14 @@ The code includes a function predict_fare_amount that uses the trained XGBoost m
 ### Heatmap of Ride Count
 The code also includes functions to create and plot a heatmap of ride counts for a given week. The heatmap displays ride counts for different hour groups and days of the week. It allows users to input a specific date, and the code will generate the heatmap for the week containing that date.
 
-### Usage
-To use this code:
-
+### Final Notebook Usage
 Run the code cells in order, starting with importing data and libraries.
 Make sure to enter your Kaggle username and API key to download the dataset.
 Use the predict_ride_count and predict_fare_amount functions for individual predictions.
 Use the create_matrix and plot_matrix functions to generate and plot the heatmap of ride counts for a specific week.
+
+### Final Prediction Model Usage
+Pull the Uber-Prediction folder and run RunModel.py
 
 ### Conclusion
 This code provides an efficient way to predict Uber ride demand and potential revenue based on historical data. It is a valuable tool for Uber's operations and pricing strategy.
